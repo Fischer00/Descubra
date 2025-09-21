@@ -9,6 +9,7 @@ const Quiz: React.FC = () => {
   const [score, setScore] = useState(0);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
+  const [isNextDisabled, setIsNextDisabled] = useState(false); // ✅ trava cliques múltiplos
 
   const handleAnswerSelect = (letter: string) => {
     if (showResult) return;
@@ -16,7 +17,9 @@ const Quiz: React.FC = () => {
   };
 
   const handleNextQuestion = () => {
-    if (!selectedAnswer) return;
+    if (!selectedAnswer || isNextDisabled) return;
+
+    setIsNextDisabled(true); // ✅ trava ao clicar
 
     const currentQ = quizQuestions[currentQuestion];
     const selectedOption = currentQ.options.find(opt => opt.letter === selectedAnswer);
@@ -24,19 +27,20 @@ const Quiz: React.FC = () => {
     setUserAnswers(newAnswers);
 
     if (selectedOption?.correct) {
-      setScore(score + 1);
+      setScore((prev) => prev + 1);
     }
 
     setShowResult(true);
 
     setTimeout(() => {
       if (currentQuestion < quizQuestions.length - 1) {
-        setCurrentQuestion(currentQuestion + 1);
+        setCurrentQuestion((prev) => prev + 1);
         setSelectedAnswer(null);
         setShowResult(false);
       } else {
         setQuizCompleted(true);
       }
+      setIsNextDisabled(false); // ✅ libera para próxima
     }, 2000);
   };
 
@@ -47,6 +51,7 @@ const Quiz: React.FC = () => {
     setScore(0);
     setQuizCompleted(false);
     setUserAnswers([]);
+    setIsNextDisabled(false);
   };
 
   const getScoreMessage = () => {
@@ -176,9 +181,9 @@ const Quiz: React.FC = () => {
           
           <button
             onClick={handleNextQuestion}
-            disabled={!selectedAnswer}
+            disabled={!selectedAnswer || isNextDisabled}
             className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
-              selectedAnswer 
+              selectedAnswer && !isNextDisabled
                 ? 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800' 
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
